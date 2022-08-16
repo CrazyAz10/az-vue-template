@@ -1,0 +1,67 @@
+stages:
+- repInstall
+- install
+- eslint
+- build
+- deploy
+cache:
+   paths:
+    - node_modules
+    - dist
+
+repInstall-job:
+    only:
+      refs:
+        - test
+      changes:
+        - package.json
+    tags:
+      - test
+    stage: repInstall
+    script:
+      - echo "依赖发生变化,开始install"
+      - npm install
+      - echo "完成install"
+
+install-job:
+    only:
+        refs:
+          - test
+    tags:
+    - test
+    stage: install
+    script:
+    - echo "开始install"
+    - if [ ! -d "./node_modules/" ];then   npm install;   else   echo "缓存存在,跳过install"; fi
+    - echo "完成install"
+
+eslint-job:
+    only:
+        refs:
+          - test
+    tags:
+    - test
+    stage: eslint
+    script:
+    - npm run lint
+
+build-job:
+    only:
+        refs:
+          - test
+    tags:
+    - test
+    stage: build
+    script:
+    - npm run build:stage
+    
+deploy-job:
+    only:
+        refs:
+          - test
+    tags:
+    - test
+    stage: deploy
+    script:
+    - rm -rf /opt/farm/www/webwww/*
+    - cp -r ./dist/* /opt/farm/www/webwww
